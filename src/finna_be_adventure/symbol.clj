@@ -1,19 +1,22 @@
 (ns finna-be-adventure.symbol
   (:refer-clojure :rename {symbol core-symbol})
-  (:require [finna-be-adventure.core :as c])
   (:require [derp-octo-cyril.parser :as p])
   (:require [derp-octo-cyril.sequence-primitives :as s]))
 
-(defn ->symbol [namespace symbol]
-  {:namespace namespace
-   :symbol symbol})
+(defn ->symbol
+  ([symbol]
+     (core-symbol symbol))
+  ([namespace symbol]
+     (core-symbol namespace symbol)))
 
 (def symbol-special
   (s/one-of (set "*+-!?_")))
 
 (def symbol-character
-  (p/choose (s/char \.)
-            s/alphanumeric
+  (p/choose s/alphanumeric
+            (p/lift str
+                    (s/char \:)
+                    (p/not-followed-by (s/char \:)))
             symbol-special))
 
 (def symbol-first-character
@@ -21,18 +24,26 @@
             symbol-special))
 
 (def symbol-part
-  (p/lift (partial reduce str)
+  (p/lift (partial apply str)
           symbol-first-character
           (p/many symbol-character)))
 
+(def dot
+  (p/lift str
+          (s/char \.)
+          symbol-character))
+
 (def namespace-part
-  (p/lift (fn [s _] s)
-          symbol-part
-          (s/char \/)))
+  (p/lift (partial apply str)
+          symbol-first-character
+          (p/many (p/choose dot
+                            symbol-character))))
 
 (def symbol
-  (c/token
-   (p/lift (fn [_ namespace symbol] (->symbol namespace symbol))
-           (p/optional (s/char \:))
-           (p/optional namespace-part)
-           symbol-part)))
+  (p/choose (p/try (p/lift (fn [namespace _ symbol]
+                             (->symbol namespace symbol))
+                           namespace-part
+                           (s/char \/)
+                           symbol-part))
+            (p/lift ->symbol
+                    symbol-part)))

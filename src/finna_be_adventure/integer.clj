@@ -1,17 +1,10 @@
 (ns finna-be-adventure.integer
-  (:require [finna-be-adventure.core :as c])
   (:require [derp-octo-cyril.parser :as p])
   (:require [derp-octo-cyril.sequence-primitives :as s])
   (:import java.math.BigInteger))
 
-(defn ->integer
-  ([value-str]
-     (->integer value-str 10))
-  ([value-str radix]
-     (BigInteger. value-str radix)))
-
-(def digits-lower "0123456789abcdefghijklmnopqrstuvwxyz")
-(def digits-upper "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+(defn ->integer [value-str radix]
+  (BigInteger. value-str radix))
 
 (def hex-radix
   (p/lift (constantly 16)
@@ -26,15 +19,20 @@
   (p/choose (p/try hex-radix)
             (apply p/choose (map radix-i (range 2 37)))))
 
+(defn digits [radix]
+  (let [lower "0123456789abcdefghijklmnopqrstuvwxyz"
+        upper "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
+    (p/lift (partial reduce str)
+            (p/some (s/one-of (set (concat (take radix lower)
+                                           (take radix upper))))))))
+
 (defn integer-in-radix [radix]
-  (let [valid-digits (set (concat (take radix digits-lower)
-                                  (take radix digits-upper)))]
-    (p/lift (fn [sign digits]
-              (->integer (reduce str sign digits) radix))
-            (p/optional (s/one-of (set "+-")))
-            (p/some (s/one-of valid-digits)))))
+  (p/lift (fn [sign digits]
+            (->integer (str sign digits) radix))
+          (p/optional (s/one-of (set "+-")))
+          (digits radix)))
 
 (def integer
-  (c/token
-   (p/choose (p/try (p/bind radix integer-in-radix))
-             (integer-in-radix 10))))
+  (p/label (p/choose (p/try (p/bind radix integer-in-radix))
+                     (integer-in-radix 10))
+           "integer"))

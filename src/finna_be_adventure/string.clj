@@ -1,10 +1,9 @@
 (ns finna-be-adventure.string
-  (:require [finna-be-adventure.core :as c])
   (:require [derp-octo-cyril.parser :as p])
   (:require [derp-octo-cyril.sequence-primitives :as s]))
 
 (defn ->string [chars]
-  (apply str chars))
+  chars)
 
 (def string-escape
   (let [escapes {\t \tab
@@ -22,9 +21,9 @@
   (s/not-char \"))
 
 (def string
-  (c/token
-   (p/lift (fn [_ chars _] (->string chars))
-           (s/char \")
-           (p/many (p/choose string-escape
-                             string-character))
-           (s/char \"))))
+  (p/lift (fn [_ chars _]
+            (->string (reduce str "" chars)))
+          (s/char \")
+          (p/many (p/choose string-escape
+                            string-character))
+          (s/char \")))
