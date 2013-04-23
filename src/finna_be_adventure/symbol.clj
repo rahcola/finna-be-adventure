@@ -1,49 +1,58 @@
 (ns finna-be-adventure.symbol
-  (:refer-clojure :rename {symbol core-symbol})
   (:require [derp-octo-cyril.parser :as p])
-  (:require [derp-octo-cyril.sequence-primitives :as s]))
+  (:require [derp-octo-cyril.primitives :as prim])
+  (:require [derp-octo-cyril.combinators :as c]))
 
-(defn ->symbol
-  ([symbol]
-     (core-symbol symbol))
-  ([namespace symbol]
-     (core-symbol namespace symbol)))
+(defn ^{:private true}
+  ->symbol
+  ([sym]
+     (symbol sym))
+  ([namespace sym]
+     (symbol namespace sym)))
 
-(def symbol-special
-  (s/one-of (set "*+-!?_")))
+(def ^{:private true}
+  symbol-special
+  (prim/one-of (set "*+-!?_")))
 
-(def symbol-character
-  (p/choose s/alphanumeric
+(def ^{:private true}
+  symbol-character
+  (p/choose prim/alphanumeric
             (p/lift str
-                    (s/char \:)
-                    (p/not-followed-by (s/char \:)))
+                    (prim/char \:)
+                    (c/not-followed-by (prim/char \:)))
             symbol-special))
 
-(def symbol-first-character
-  (p/choose s/letter
+(def ^{:private true}
+  symbol-first-character
+  (p/choose prim/letter
             symbol-special))
 
-(def symbol-part
+(def ^{:private true}
+  symbol-part
   (p/lift (partial apply str)
           symbol-first-character
-          (p/many symbol-character)))
+          (c/many symbol-character)))
 
-(def dot
+(def ^{:private true}
+  dot
   (p/lift str
-          (s/char \.)
+          (prim/char \.)
           symbol-character))
 
-(def namespace-part
+(def ^{:private true}
+  namespace-part
   (p/lift (partial apply str)
           symbol-first-character
-          (p/many (p/choose dot
+          (c/many (p/choose dot
                             symbol-character))))
 
-(def symbol
-  (p/choose (p/try (p/lift (fn [namespace _ symbol]
-                             (->symbol namespace symbol))
-                           namespace-part
-                           (s/char \/)
-                           symbol-part))
-            (p/lift ->symbol
-                    symbol-part)))
+(def symbol-parser
+  (c/label (p/choose (c/try
+                      (p/lift (fn [namespace _ symbol]
+                                (->symbol namespace symbol))
+                              namespace-part
+                              (prim/char \/)
+                              symbol-part))
+                     (p/lift ->symbol
+                             symbol-part))
+           "symbol"))

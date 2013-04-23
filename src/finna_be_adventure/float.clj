@@ -1,41 +1,47 @@
 (ns finna-be-adventure.float
   (:require [derp-octo-cyril.parser :as p])
-  (:require [derp-octo-cyril.sequence-primitives :as s])
+  (:require [derp-octo-cyril.primitives :as prim])
+  (:require [derp-octo-cyril.combinators :as c])
   (:import java.math.BigDecimal))
 
-(defn ->float [s]
+(defn ^{:private true}
+  ->float [s]
   (BigDecimal. s))
 
-(def point
-  (s/char \.))
+(def ^{:private true}
+  point
+  (prim/char \.))
 
-(def sign
-  (s/one-of (set "+-")))
+(def ^{:private true}
+  sign
+  (prim/one-of (set "+-")))
 
-(def digits
+(def ^{:private true}
+  digits
   (p/lift (partial reduce str)
-          (p/some (s/one-of (set "0123456789")))))
+          (c/some (prim/one-of (set "0123456789")))))
 
-(def exponent
+(def ^{:private true}
+  exponent
   (p/lift str
-          (s/one-of (set "eE"))
-          (p/optional sign)
+          (prim/one-of (set "eE"))
+          (c/optional sign)
           digits))
 
-(def float
-  (p/label (p/choose (p/lift (comp ->float str)
-                             (p/optional sign)
+(def float-parser
+  (c/label (p/choose (p/lift (comp ->float str)
+                             (c/optional sign)
                              digits
                              point
-                             (p/optional digits)
-                             (p/optional exponent))
+                             (c/optional digits)
+                             (c/optional exponent))
                      (p/lift (comp ->float str)
-                             (p/optional sign)
+                             (c/optional sign)
                              point
                              digits
-                             (p/optional exponent))
+                             (c/optional exponent))
                      (p/lift (comp ->float str)
-                             (p/optional sign)
+                             (c/optional sign)
                              digits
                              exponent))
            "float"))

@@ -1,12 +1,9 @@
-(ns finna-be-adventure.character
-  (:refer-clojure :rename {nil core-nil})
+(ns finna-be-adventure.nil
   (:require [derp-octo-cyril.parser :as p])
-  (:require [derp-octo-cyril.sequence-primitives :as s]))
+  (:require [derp-octo-cyril.primitives :as prim])
+  (:require [derp-octo-cyril.combinators :as c]))
 
-(def ->nil core-nil)
-
-(def nil
-  (p/label (p/lift (fn [_]
-                     ->nil)
-                   (s/string "nil"))
+(def nil-parser
+  (c/label (p/lift (fn [_] nil)
+                   (prim/string "nil"))
            "nil"))

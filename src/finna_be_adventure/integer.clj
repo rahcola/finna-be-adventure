@@ -1,38 +1,45 @@
 (ns finna-be-adventure.integer
   (:require [derp-octo-cyril.parser :as p])
-  (:require [derp-octo-cyril.sequence-primitives :as s])
+  (:require [derp-octo-cyril.primitives :as prim])
+  (:require [derp-octo-cyril.combinators :as c])
   (:import java.math.BigInteger))
 
-(defn ->integer [value-str radix]
+(defn ^{:private true}
+  ->integer [value-str radix]
   (BigInteger. value-str radix))
 
-(def hex-radix
+(def ^{:private true}
+  hex-radix
   (p/lift (constantly 16)
-          (p/choose (s/string "0x")
-                    (s/string "0X"))))
+          (p/choose (prim/string "0x")
+                    (prim/string "0X"))))
 
-(defn radix-i [i]
+(defn ^{:private true}
+  radix-i [i]
   (p/lift (constantly i)
-          (s/string (str i "r"))))
+          (prim/string (str i "r"))))
 
-(def radix
-  (p/choose (p/try hex-radix)
+(def ^{:private true}
+  radix
+  (p/choose (c/try hex-radix)
             (apply p/choose (map radix-i (range 2 37)))))
 
-(defn digits [radix]
+(defn ^{:private true}
+  digits [radix]
   (let [lower "0123456789abcdefghijklmnopqrstuvwxyz"
         upper "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
     (p/lift (partial reduce str)
-            (p/some (s/one-of (set (concat (take radix lower)
-                                           (take radix upper))))))))
+            (c/some (prim/one-of (set (concat (take radix lower)
+                                              (take radix upper))))))))
 
-(defn integer-in-radix [radix]
+(defn ^{:private true}
+  integer-in-radix [radix]
   (p/lift (fn [sign digits]
             (->integer (str sign digits) radix))
-          (p/optional (s/one-of (set "+-")))
+          (c/optional (prim/one-of (set "+-")))
           (digits radix)))
 
-(def integer
-  (p/label (p/choose (p/try (p/bind radix integer-in-radix))
+(def integer-parser
+  (c/label (p/choose (c/try (p/bind radix integer-in-radix))
                      (integer-in-radix 10))
            "integer"))

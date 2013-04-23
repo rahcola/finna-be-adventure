@@ -1,11 +1,14 @@
 (ns finna-be-adventure.string
   (:require [derp-octo-cyril.parser :as p])
-  (:require [derp-octo-cyril.sequence-primitives :as s]))
+  (:require [derp-octo-cyril.primitives :as prim])
+  (:require [derp-octo-cyril.combinators :as c]))
 
-(defn ->string [chars]
+(defn ^{:private true}
+  ->string [chars]
   chars)
 
-(def string-escape
+(def ^{:private true}
+  string-escape
   (let [escapes {\t \tab
                  \b \backspace
                  \n \newline
@@ -14,16 +17,17 @@
                  \" \"
                  \\ \\}]
     (p/lift (fn [_ c] (get escapes c))
-            (s/char \\)
-            (s/one-of (set (keys escapes))))))
+            (prim/char \\)
+            (prim/one-of (set (keys escapes))))))
 
-(def string-character
-  (s/not-char \"))
+(def ^{:private true}
+  string-character
+  (prim/not-char \"))
 
-(def string
+(def string-parser
   (p/lift (fn [_ chars _]
             (->string (reduce str "" chars)))
-          (s/char \")
-          (p/many (p/choose string-escape
+          (prim/char \")
+          (c/many (p/choose string-escape
                             string-character))
-          (s/char \")))
+          (prim/char \")))

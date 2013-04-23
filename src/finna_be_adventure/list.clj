@@ -1,11 +1,11 @@
 (ns finna-be-adventure.list
-  (:refer-clojure :rename {list core-list
-                           cons core-cons
+  (:refer-clojure :rename {cons core-cons
                            first core-first
                            rest core-rest
                            empty? core-empty?})
   (:require [derp-octo-cyril.parser :as p])
-  (:require [derp-octo-cyril.sequence-primitives :as s]))
+  (:require [derp-octo-cyril.primitives :as prim])
+  (:require [derp-octo-cyril.combinators :as c]))
 
 (defprotocol Seq
   (first [s])
@@ -13,7 +13,8 @@
   (cons [s o])
   (empty? [s]))
 
-(defn list->str [list]
+(defn ^{:private true}
+  list->str [list]
   (loop [sb (StringBuilder. "(")
          list list]
     (if (empty? list)
@@ -46,15 +47,16 @@
   (toString [_]
     "()"))
 
-(defn ->list [datums]
+(defn ^{:private true}
+  ->list [datums]
   (if (core-empty? datums)
     (Nil.)
     (cons (->list (core-rest datums))
           (core-first datums))))
 
-(defn list [datum whitespace]
+(defn list-parser [datum whitespace]
   (p/lift (fn [_ datums _]
             (->list datums))
-          (p/many whitespace)
-          (p/many datum)
-          (s/char \))))
+          (c/many whitespace)
+          (c/many datum)
+          (prim/char \))))

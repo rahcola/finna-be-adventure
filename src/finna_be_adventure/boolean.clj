@@ -1,11 +1,11 @@
 (ns finna-be-adventure.boolean
-  (:refer-clojure :rename {boolean core-boolean})
   (:require [derp-octo-cyril.parser :as p])
-  (:require [derp-octo-cyril.sequence-primitives :as s]))
+  (:require [derp-octo-cyril.primitives :as prim])
+  (:require [derp-octo-cyril.combinators :as c]))
 
-(def boolean
-  (p/label (p/choose (p/lift (constantly true)
-                             (s/string "true"))
+(def boolean-parser
+  (c/label (p/choose (p/lift (constantly true)
+                             (prim/string "true"))
                      (p/lift (constantly false)
-                             (s/string "false")))
+                             (prim/string "false")))
            "boolean"))

@@ -1,34 +1,40 @@
 (ns finna-be-adventure.character
   (:require [derp-octo-cyril.parser :as p])
-  (:require [derp-octo-cyril.sequence-primitives :as s]))
+  (:require [derp-octo-cyril.primitives :as prim])
+  (:require [derp-octo-cyril.combinators :as c]))
 
-(defn ->character
+(defn ^{:private true}
+  ->character
   [c]
   c)
 
-(def newline
+(def ^{:private true}
+  newline
   (p/lift (constantly \newline)
-          (s/string "newline")))
+          (prim/string "newline")))
 
-(def space
+(def ^{:private true}
+  space
   (p/lift (constantly \space)
-          (s/string "space")))
+          (prim/string "space")))
 
-(def tab
+(def ^{:private true}
+  tab
   (p/lift (constantly \tab)
-          (s/string "tab")))
+          (prim/string "tab")))
 
-(def return
+(def ^{:private true}
+  return
   (p/lift (constantly \return)
-          (s/string "return")))
+          (prim/string "return")))
 
-(def character
-  (p/label (p/lift (fn [_ c]
+(def character-parser
+  (c/label (p/lift (fn [_ c]
                      (->character c))
-                   (s/char \\)
+                   (prim/char \\)
                    (p/choose newline
                              space
                              tab
                              return
-                             s/any-char))
+                             prim/any-char))
            "character"))
