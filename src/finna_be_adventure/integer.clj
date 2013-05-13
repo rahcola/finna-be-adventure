@@ -2,11 +2,12 @@
   (:require [derp-octo-cyril.parser :as p])
   (:require [derp-octo-cyril.primitives :as prim])
   (:require [derp-octo-cyril.combinators :as c])
+  (:require [finna-be-adventure.expression.constant :as const])
   (:import java.math.BigInteger))
 
 (defn ^{:private true}
   ->integer [value-str radix]
-  (BigInteger. value-str radix))
+  (const/->Integer (BigInteger. value-str radix)))
 
 (def ^{:private true}
   hex-radix

@@ -3,12 +3,18 @@
   (:require [derp-octo-cyril.primitives :as prim])
   (:require [derp-octo-cyril.combinators :as c]))
 
+(deftype ASymbol [namespace name]
+  Object
+  (toString [_]
+    (str (if namespace (str namespace "/"))
+         name)))
+
 (defn ^{:private true}
   ->symbol
-  ([sym]
-     (symbol sym))
-  ([namespace sym]
-     (symbol namespace sym)))
+  ([name]
+     (->symbol nil name))
+  ([namespace name]
+     (ASymbol. namespace name)))
 
 (def ^{:private true}
   symbol-special
@@ -48,8 +54,8 @@
 
 (def symbol-parser
   (c/label (p/choose (c/try
-                      (p/lift (fn [namespace _ symbol]
-                                (->symbol namespace symbol))
+                      (p/lift (fn [namespace _ name]
+                                (->symbol namespace name))
                               namespace-part
                               (prim/char \/)
                               symbol-part))
